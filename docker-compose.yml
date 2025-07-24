@@ -1,0 +1,106 @@
+version: '3.9'
+
+services:
+  fastapi:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file: .env.dev
+    ports:
+      - "8999:8000"
+    volumes:
+      - ./tmp:/tmp
+      - ./models:/models
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      celery:
+        condition: service_started
+    # Без command — ENTRYPOINT /entrypoint.sh запустит uvicorn по умолчанию
+
+  celery:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file: .env.dev
+    volumes:
+      - ./tmp:/tmp
+      - ./models:/models
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    command: ["worker"]  # Тогда entrypoint.sh увидит $1=worker и запустит Celery
+
+  redis:
+    image: redis:7
+    ports:
+      - "6380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres:
+    image: postgres:14
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: app
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # minio:
+  #   image: minio/minio
+  #   command: server /data
+  #   environment:
+  #     MINIO_ROOT_USER: minio
+  #     MINIO_ROOT_PASSWORD: minio123
+  #   ports:
+  #     - "9000:9000"
+  #   volumes:
+  #     - minio_data:/data
+  #   healthcheck:
+  #     test: ["CMD", "mc", "ls", "localhost:9000"]
+  #     interval: 15s
+  #     timeout: 5s
+  #     retries: 5
+
+  # triton:
+  #   image: nvcr.io/nvidia/tritonserver:24.05-py3
+  #   deploy:
+  #     resources:
+  #       reservations:
+  #         devices:
+  #           - driver: nvidia
+  #             count: all
+  #             capabilities: [gpu]
+  #   volumes:
+  #     - ./models:/models
+  #   command: tritonserver --model-repository=/models
+
+  # llm:
+  #   image: vllm/vllm-openai  # проверьте, что этот образ доступен
+  #   ports:
+  #     - "8001:8000"
+  #   command: --model mistralai/Mistral-7B-Instruct-v0.2
+  #   deploy:
+  #     resources:
+  #       reservations:
+  #         devices:
+  #           - driver: nvidia
+  #             count: all
+  #             capabilities: [gpu]
+
+volumes:
+  pg_data:
+  # minio_data:
