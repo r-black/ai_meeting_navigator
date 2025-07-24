@@ -9,6 +9,7 @@ services:
     ports:
       - "8000:8000"
     volumes:
+      - .:/app  
       - ./tmp:/tmp
       - ./models:/models
     depends_on:
@@ -26,6 +27,7 @@ services:
       dockerfile: Dockerfile
     env_file: .env.dev
     volumes:
+      - .:/app
       - ./tmp:/tmp
       - ./models:/models
     depends_on:

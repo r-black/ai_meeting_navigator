@@ -18,6 +18,7 @@ ffmpeg build-essential git curl libopenblas-dev apt-transport-https ca-certifica
 
 # Установка рабочей директории
 WORKDIR /app
+COPY . /app
 
 # Установка Python-зависимостей
 COPY backend/requirements.txt ./
