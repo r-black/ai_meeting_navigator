@@ -34,10 +34,6 @@ services:
       postgres:
         condition: service_healthy
     command: ["worker"]  # Тогда entrypoint.sh увидит $1=worker и запустит Celery
-    deploy:
-      resources:
-        limits:
-          memory: 1g
 
   redis:
     image: redis:7
