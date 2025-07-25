@@ -1,14 +1,21 @@
+from functools import lru_cache
+
 import torch
 from transformers import T5ForConditionalGeneration, T5Tokenizer
 MODEL_NAME = 'cointegrated/rut5-base-absum'
-model = T5ForConditionalGeneration.from_pretrained(MODEL_NAME)
-tokenizer = T5Tokenizer.from_pretrained(MODEL_NAME)
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model = model.to(device)
+
+
+@lru_cache()
+def get_model_and_tokenizer():
+    model = T5ForConditionalGeneration.from_pretrained(MODEL_NAME)
+    tokenizer = T5Tokenizer.from_pretrained(MODEL_NAME)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = model.to(device)
+    return model, tokenizer
 
 def summarize(
     text, n_words=None, compression=None,
-    max_length=1000, num_beams=3, do_sample=False, repetition_penalty=10.0, 
+    max_length=256, num_beams=3, do_sample=False, repetition_penalty=10.0, 
     **kwargs
 ):
     """
@@ -17,6 +24,7 @@ def summarize(
     - n_words (int) is an approximate number of words to generate.
     - compression (float) is an approximate length ratio of summary and original text.
     """
+    model, tokenizer = get_model_and_tokenizer()
     if n_words:
         text = '[{}] '.format(n_words) + text
     elif compression:
