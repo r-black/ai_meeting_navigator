@@ -3,7 +3,7 @@ import requests
 
 if USE_FASTER_WHISPER:
     from faster_whisper import WhisperModel
-    model = WhisperModel("base", compute_type="int8")  # можно поменять на "tiny", "small" и т.п.
+    model = WhisperModel(model_size_or_path="base", device="cpu", compute_type="int8")
 
 def transcribe(path: str) -> str:
     if USE_FASTER_WHISPER:
