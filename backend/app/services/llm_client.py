@@ -3,8 +3,8 @@ from transformers import T5ForConditionalGeneration, T5Tokenizer
 MODEL_NAME = 'cointegrated/rut5-base-absum'
 model = T5ForConditionalGeneration.from_pretrained(MODEL_NAME)
 tokenizer = T5Tokenizer.from_pretrained(MODEL_NAME)
-model.cuda()
-model.eval()
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+model = model.to(device)
 
 def summarize(
     text, n_words=None, compression=None,
